@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+require 'commander/import'
+require 'segmenter_model'
+
+program :name, 'segmenter_model'
+program :version, SegmenterModel::VERSION
+program :description, 'SegmenterModel is a generator for TinySegmenter model'
+
+default_command :help
+
+command :corpus do |c|
+  c.syntax = 'segmenter_model corpus [options]'
+  c.description = 'Create a new corpus for features'
+
+  c.option '-F', '--file [FILE]', 'original file (split whitespace)'
+
+  c.action do |args, options|
+    SegmenterModel::Cli::Corpus.process(args)
+  end
+end
+
+command :features do |c|
+  c.syntax = 'segmenter_model features [options]'
+  c.description = 'Create a new features for model'
+
+  c.option '-F', '--file [FILE]', 'original file (created by corpus command)'
+
+  c.action do |args, options|
+    SegmenterModel::Cli::Features.process(args)
+  end
+end
+
+command :generate do |c|
+  c.syntax = 'segmenter_model generate [options]'
+  c.description = 'Generate a new model'
+
+  c.option '-F', '--file [FILE]', 'original file (created by features command)'
+  c.option '-M', '--model [FILE]', 'current model file (you can use when re-generate)'
+
+  c.action do |args, options|
+    SegmenterModel::Cli::Generator.process(args)
+  end
+end
+alias_command :g, :generate
