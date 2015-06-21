@@ -12,6 +12,7 @@ require 'rubygems'
 # internal
 require 'segmenter_model/version'
 require 'segmenter_model/configuration'
+require 'segmenter_model/segmenter'
 require_all 'segmenter_model/cli'
 
 module SegmenterModel

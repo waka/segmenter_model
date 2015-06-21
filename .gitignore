@@ -13,3 +13,5 @@
 corpus.txt
 features.txt
 model
+
+.DS_Store

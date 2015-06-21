@@ -50,7 +50,6 @@ module SegmenterModel
       def self.output(corpus)
         file = File.join(SegmenterModel.destination_path, 'corpus.txt')
         File.open(file, 'a') do |file|
-          puts file.path
           file.write(corpus)
         end
       end
