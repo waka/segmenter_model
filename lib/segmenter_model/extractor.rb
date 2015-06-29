@@ -1,5 +1,5 @@
 module SegmenterModel
-  class Segmenter
+  class Extractor
     @@patterns = [
       [/[一二三四五六七八九十百千万億兆]/, 'M'],
       [/[一-龠々〆ヵヶ]/, 'H'],
@@ -8,10 +8,6 @@ module SegmenterModel
       [/[a-zA-Zａ-ｚＡ-Ｚ]/, 'A'],
       [/[0-9０-９]/, 'N'],
     ]
-
-    def initialize(learner)
-      @learner = learner
-    end
 
     def type(str)
       res = 'O'
@@ -24,7 +20,7 @@ module SegmenterModel
       res
     end
 
-    def add_sentence(sentence)
+    def extract(sentence)
       return unless sentence
 
       tags = ['U', 'U', 'U']
@@ -47,15 +43,16 @@ module SegmenterModel
       size = chars.size - 3
       (4...size).to_a.each do |i|
         label = tags[i] == 'B' ? 1 : -1
-        instance = @learner.add_instance(
-          getAttributes(i, tags, chars, types),
-          label
-        )
-        yield instance
+        yield feature(attributes(i, tags, chars, types), label)
       end
     end
 
-    def getAttributes(i, tags, chars, types)
+    def feature(attrs, label)
+      arr = [label.to_s] + attrs
+      arr.join(' ')
+    end
+
+    def attributes(i, tags, chars, types)
       w1 = chars[i-3]
       w2 = chars[i-2]
       w3 = chars[i-1]

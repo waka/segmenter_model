@@ -9,13 +9,18 @@ module SegmenterModel
         raise 'not exist file' unless File.exists?(features_file_path)
         File.delete(model_file_path) if File.exists?(model_file_path)
 
-        trainer = SegmenterModel::Trainer.new
+        learner = SegmenterModel::Learner.new
+        learner.pre_process(features_file_path)
+
+        learner.learn do |trained|
+          output trained
+        end
       end
 
-      def self.output(train)
+      def self.output(trained)
         return unless feature
         File.open(model_file_path, 'a') do |file|
-          file.puts(train)
+          file.puts(trained)
         end
       end
 

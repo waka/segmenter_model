@@ -9,12 +9,12 @@ module SegmenterModel
         raise 'not exist file' unless File.exists?(corpus_file_path)
         File.delete(features_file_path) if File.exists?(features_file_path)
 
-        segmenter = SegmenterModel::Segmenter.new(Learner.new)
+        extractor = SegmenterModel::Extractor.new
 
         File.open(corpus_file_path) do |file|
           file.each_line do |line|
-            segmenter.add_sentence(line) do |segment|
-              output segment
+            extractor.extract(line) do |extract|
+              output extract
             end
           end
         end
@@ -33,13 +33,6 @@ module SegmenterModel
 
       def self.corpus_file_path
         File.join(SegmenterModel.destination_path, 'corpus.txt')
-      end
-    end
-
-    class Learner
-      def add_instance(attributes, label)
-        arr = [label.to_s] + attributes
-        arr.join(' ')
       end
     end
   end
