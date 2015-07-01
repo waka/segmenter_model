@@ -10,11 +10,12 @@ module SegmenterModel
         File.delete(model_file_path) if File.exists?(model_file_path)
 
         learner = SegmenterModel::Learner.new
-        learner.pre_process(features_file_path)
+        learner.init_features_and_models(features_file_path)
+        learner.init_instances(features_file_path)
 
-        learner.learn do |trained|
-          output trained
-        end
+        #learner.learn do |trained|
+        #  output trained
+        #end
       end
 
       def self.output(trained)
