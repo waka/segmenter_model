@@ -1,5 +1,7 @@
 module SegmenterModel
   class Learner
+    SPLITTER = ' '
+
     attr_reader :labels, :instances, :dignities, :features, :models
 
     def initialize(count: 100, threshold: 0.01)
@@ -19,7 +21,7 @@ module SegmenterModel
 
       File.open(file_path) do |file|
         file.each_line do |line|
-          arr = line.split('  ')
+          arr = line.split(SPLITTER)
           arr[1..-1].each do |a|
             map[a] = 0.0
           end
@@ -43,8 +45,9 @@ module SegmenterModel
 
           start_index = instances_buf.size > 0 ? instances_buf.size - 1 : 0
 
-          arr = line.split('  ')
-          @labels << arr[0]
+          arr = line.split(SPLITTER)
+          label = arr[0].to_i
+          @labels << label
           arr[1..-1].each do |a|
             index = @features.find_index{ |feature| feature == a }
             instances_buf << index
@@ -54,7 +57,7 @@ module SegmenterModel
           last_index = instances_buf.size > 0 ? instances_buf.size - 1 : 0
           r = instances_buf[start_index..last_index].dup.sort
           @instances << r
-          @dignities << Math.exp(-label * score * 2)
+          @dignities << Math.exp(-1 * label * score * 2)
         end
       end
     end
@@ -67,13 +70,13 @@ module SegmenterModel
       value / 2
     end
 
-    def learn
+    def learn!
       h_best = 0
       e_best = 0.5
       a = 0
       a_exp = 1
 
-      trainer = Adaboost.new(self)
+      trainer = Trainer.new(self)
 
       @count.times do |time|
         # update & calculate errors
@@ -87,15 +90,15 @@ module SegmenterModel
         (1..@features.size-1).to_a.each do |i|
           e = trainer.errors[i]
           e = (e + sum_plus) / sum
-          if Math.abs(0.5 - e) > Math.abs(0.5 - e_best)
+          if (0.5 - e).abs > (0.5 - e_best).abs
             h_best = i
             e_best = e
           end
         end
-        break if @threshold > Math.abs(0.5 - e_best)
+        break if @threshold > (0.5 - e_best).abs
 
         e_best = 1e-10 if 1e-10 > e_best
-        e_best = 1 - 1e-10 if (1 - 1e-10) > e_best
+        e_best = 1 - 1e-10 if e_best > (1 - 1e-10)
 
         # update model
         a = 0.5 * Math.log((1 - e_best) / e_best);
@@ -108,14 +111,49 @@ module SegmenterModel
         end
       end
     end
+
+    def create_model
+      b = -1 * @models[0]
+      @features.each_with_index do |feature, i|
+        model = @models[i]
+        next if model == 0.0
+        yield "#{feature} #{model}"
+        b -= model
+      end
+      yield "#{(b / 2)}"
+    end
   end
 
-  class AdaBoost
+  class Trainer
+    attr_accessor :sum, :sum_plus, :errors
+
     def initialize(learner)
+      @sum = 0.0;
+      @sum_plus = 0.0;
+      @errors = []
       @learner = learner
     end
 
     def train(best, exp)
+      @learner.instances.each_with_index do |range, i|
+        label = @learner.labels[i]
+        index = range.find_index{ |num| num >= best }
+        prediction = (range[index] == range.last || range[index] != best) ? -1 : 1
+
+        if 0 > label * prediction
+          @learner.dignities[i] *= exp
+        else
+          @learner.dignities[i] /= exp
+        end
+
+        @sum += @learner.dignities[i]
+        @sum_plus += @learner.dignities[i] if label > 0
+
+        d = @learner.dignities[i] * label
+        range.each do |r|
+          @errors[r] = d
+        end
+      end
     end
   end
 end

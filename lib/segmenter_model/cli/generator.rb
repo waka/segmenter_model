@@ -12,14 +12,14 @@ module SegmenterModel
         learner = SegmenterModel::Learner.new
         learner.init_features_and_models(features_file_path)
         learner.init_instances(features_file_path)
-
-        #learner.learn do |trained|
-        #  output trained
-        #end
+        learner.learn!
+        learner.create_model do |trained|
+          output trained
+        end
       end
 
       def self.output(trained)
-        return unless feature
+        return unless trained
         File.open(model_file_path, 'a') do |file|
           file.puts(trained)
         end
